@@ -1,0 +1,28 @@
+{
+  "name": "bf2-stats-jsonifier",
+  "version": "1.0.0",
+  "description": "A lightweight Lambda function to parse Battlefield 2 statistics and return them as JSON",
+  "private": true,
+  "main": "app.js",
+  "author": "cetteup <me@cetteup.com>",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  },
+  "scripts": {},
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cetteup/bf2-stats-jsonifier.git"
+  },
+  "keywords": [
+    "bf2",
+    "battlefield 2",
+    "json",
+    "stats"
+  ],
+  "bugs": {
+    "url": "https://github.com/cetteup/bf2-stats-jsonifier/issues"
+  },
+  "homepage": "https://github.com/cetteup/bf2-stats-jsonifier"
+}
