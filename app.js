@@ -31,7 +31,8 @@ const sources = {
         endpoint: 'searchforplayers.aspx',
         defaultParams: {},
         requiredParams: ['nick'],
-        propertyKeys: ['players']
+        propertyKeys: ['players'],
+        forceReturnArray: true
     }
 }
 
@@ -96,12 +97,12 @@ async function fetchFromSource(source, eventQueryParameters) {
 
     // Parse BF2 data format
     const rawResponse = await response.text();
-    const parsedResponse = await parseBf2Response(rawResponse, source.propertyKeys);
+    const parsedResponse = await parseBf2Response(rawResponse, source.propertyKeys, source.forceReturnArray);
 
     return parsedResponse
 }
 
-async function parseBf2Response(rawResponse, propertyKeys) {
+async function parseBf2Response(rawResponse, propertyKeys, forceReturnArray = false) {
     // Split response into lines
     let lines = rawResponse.split('\n');
 
@@ -150,7 +151,8 @@ async function parseBf2Response(rawResponse, propertyKeys) {
             keys.forEach((key, index) => returnObj[key] = dataLines[0][index]);
         }
         // Only a single line of data, add as properties under key (child object)
-        else if (dataLines.length === 1) {
+        // exception: player search returning only a single player (in that case, force return an array)
+        else if (dataLines.length === 1 && !forceReturnArray) {
             const propertyKey = propertyKeys[datasetIndex - 1];
             returnObj[propertyKey] = {};
             keys.forEach((key, index) => returnObj[propertyKey][key] = dataLines[0][index]);
