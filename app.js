@@ -7,22 +7,32 @@ const sources = {
         defaultParams: {
             info: 'per*,cmb*,twsc,cpcp,cacp,dfcp,kila,heal,rviv,rsup,rpar,tgte,dkas,dsab,cdsc,rank,cmsc,kick,kill,deth,suic,ospm,klpm,klpr,dtpr,bksk,wdsk,bbrs,tcdr,ban,dtpm,lbtl,osaa,vrk,tsql,tsqm,tlwf,mvks,vmks,mvn*,vmr*,fkit,fmap,fveh,fwea,wtm-,wkl-,wdt-,wac-,wkd-,vtm-,vkl-,vdt-,vkd-,vkr-,atm-,awn-,alo-,abr-,ktm-,kkl-,kdt-,kkd-'
         },
+        requiredParams: ['pid'],
         propertyKeys: ['player']
     },
     getrankinfo: {
         endpoint: 'getrankinfo.aspx',
+        requiredParams: ['pid'],
         defaultParams: {}
     },
     getawardsinfo: {
         endpoint: 'getawardsinfo.aspx',
         defaultParams: {},
+        requiredParams: ['pid'],
         propertyKeys: ['awards']
     },
     getunlockinfo: {
         endpoint: 'getunlockinfo.aspx',
         defaultParams: {},
+        requiredParams: ['pid'],
         propertyKeys: ['status', 'unlocks']
     },
+    searchforplayers: {
+        endpoint: 'searchforplayers.aspx',
+        defaultParams: {},
+        requiredParams: ['nick'],
+        propertyKeys: ['players']
+    }
 }
 
 exports.lambdaHandler = async (event) => {
@@ -33,11 +43,6 @@ exports.lambdaHandler = async (event) => {
 
     // Try to fetch data from cache or source
     try {
-        // Make sure a pid has been provided
-        if (!event.queryStringParameters || !event.queryStringParameters.pid || event.queryStringParameters.pid.trim().length === 0) {
-            throw new Error('No pid provided');
-        }
-
         // Makre sure given source is valid (check if path without leading slash is a source key)
         // Note: such an event ever reaching the Lambda function would indicate a misconfigured API gateway
         const sourceKey = String(event.path || event.requestContext.http.path).substr(1);
@@ -45,7 +50,19 @@ exports.lambdaHandler = async (event) => {
             throw new Error('Invalid source provided');
         }
 
-        const stats = await fetchFromSource(sources[sourceKey], event.queryStringParameters.pid);
+        // Make sure required query params have been provided
+        const requiredParamsPresent = sources[sourceKey].requiredParams.every((param) => Object.keys(event.queryStringParameters).includes(param) && event.queryStringParameters[param].trim().length > 0)
+        if (!event.queryStringParameters || !requiredParamsPresent) {
+            throw new Error('Missing required query string paramter(s)');
+        }
+
+        // Sending a search player search with "where=e" (endswith) to BF2 always results in a timeout on their end, so block requests with "where=e"
+        if (sourceKey === 'searchforplayers' && event.queryStringParameters.where && event.queryStringParameters.where.toLowerCase() === 'e') {
+            response.statusCode = 422;
+            throw new Error('searchforplayers does not support "endswith"/"where=e" search');
+        }
+
+        const stats = await fetchFromSource(sources[sourceKey], event.queryStringParameters);
 
         // Finish setting up response
         response.statusCode = 200;
@@ -60,10 +77,10 @@ exports.lambdaHandler = async (event) => {
     return response;
 };
 
-async function fetchFromSource(source, pid) {
+async function fetchFromSource(source, eventQueryParameters) {
     let response;
     try {
-        const queryParams = { ...source.defaultParams, pid: pid };
+        const queryParams = { ...source.defaultParams, ...eventQueryParameters };
         const url = new URL(source.endpoint + '?' + Object.entries(queryParams).map((param) => `${param[0]}=${param[1]}`).join('&'), baseUrl);
         response = await fetch(url, {
             headers: {
