@@ -47,12 +47,14 @@ exports.lambdaHandler = async (event) => {
         // Note: such an event ever reaching the Lambda function would indicate a misconfigured API gateway
         const sourceKey = String(event.path || event.requestContext.http.path).substr(1);
         if (!(sourceKey in sources)) {
+            response.statusCode = 404;
             throw new Error('Invalid source provided');
         }
 
         // Make sure required query params have been provided
         const requiredParamsPresent = sources[sourceKey].requiredParams.every((param) => Object.keys(event.queryStringParameters).includes(param) && event.queryStringParameters[param].trim().length > 0)
         if (!event.queryStringParameters || !requiredParamsPresent) {
+            response.statusCode = 422;
             throw new Error('Missing required query string paramter(s)');
         }
 
@@ -69,8 +71,12 @@ exports.lambdaHandler = async (event) => {
         response.headers['Cache-Control'] = `max-age=${process.env.CACHE_TTL || 600}`
         response.body = JSON.stringify(stats);
     } catch (err) {
-        console.log(err);
-        response.statusCode = 500;
+        console.log(err)
+        if (err.message === 'Player not found') {
+            response.statusCode = 404;
+        }
+        // If no response has been set, use 500
+        if (!response.statusCode) response.statusCode = 500;
         response.body = JSON.stringify({ errors: [err.message] });
     }
 
@@ -79,19 +85,14 @@ exports.lambdaHandler = async (event) => {
 
 async function fetchFromSource(source, eventQueryParameters) {
     let response;
-    try {
-        const queryParams = { ...source.defaultParams, ...eventQueryParameters };
-        const url = new URL(source.endpoint + '?' + Object.entries(queryParams).map((param) => `${param[0]}=${param[1]}`).join('&'), baseUrl);
-        response = await fetch(url, {
-            headers: {
-                'User-Agent': 'GameSpyHTTP/1.0',
-                Host: 'BF2web.gamespy.com'
-            }
-        });
-    } catch (e) {
-        console.log(e.message)
-        throw new Error('Error querying source');
-    }
+    const queryParams = { ...source.defaultParams, ...eventQueryParameters };
+    const url = new URL(source.endpoint + '?' + Object.entries(queryParams).map((param) => `${param[0]}=${param[1]}`).join('&'), baseUrl);
+    response = await fetch(url, {
+        headers: {
+            'User-Agent': 'GameSpyHTTP/1.0',
+            Host: 'BF2web.gamespy.com'
+        }
+    });
 
     // Parse BF2 data format
     const rawResponse = await response.text();
