@@ -125,7 +125,8 @@ async function parseBf2Response(rawResponse, propertyKeys, forceReturnArray = fa
     const firstLine = lines.shift();
     if (firstLine.trim() != 'O') {
         // Throw specific error if player was not found, else use generic message
-        const errMsg = firstLine == 'E\t998' ? 'Player not found' : 'Source query resulted in an error';
+        // (PlayBF2 just returns a "converged" list of headers and dummy values if a player is not found, so check for that too)
+        const errMsg = firstLine == 'E\t998' || firstLine.startsWith('O	H	asof	D') ? 'Player not found' : 'Source query resulted in an error';
         throw new Error(errMsg);
     }
 
