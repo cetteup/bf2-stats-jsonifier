@@ -36,8 +36,8 @@ const sources = {
         requiredParams: ['pid'],
         propertyKeys: ['awards']
     },
-    getunlockinfo: {
-        endpoint: 'getunlockinfo.aspx',
+    getunlocksinfo: {
+        endpoint: 'getunlocksinfo.aspx',
         defaultParams: {},
         requiredParams: ['pid'],
         propertyKeys: ['status', 'unlocks']
