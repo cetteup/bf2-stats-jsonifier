@@ -13,6 +13,12 @@ const projects = {
         defaultHeaders: {
             'User-Agent': 'GameSpyHTTP/1.0'
         }
+    },
+    phoenix: {
+        baseUrl: 'http://bf2.phoenixnetwork.net/ASP/',
+        defaultHeaders: {
+            'User-Agent': 'GameSpyHTTP/1.0'
+        }
     }
 };
 
@@ -124,9 +130,15 @@ async function parseBf2Response(rawResponse, propertyKeys, forceReturnArray = fa
     // Make sure first line indicates ok status
     const firstLine = lines.shift();
     if (firstLine.trim() != 'O') {
-        // Throw specific error if player was not found, else use generic message
-        // (PlayBF2 just returns a "converged" list of headers and dummy values if a player is not found, so check for that too)
-        const errMsg = firstLine == 'E\t998' || firstLine.startsWith('O	H	asof	D') ? 'Player not found' : 'Source query resulted in an error';
+        /**
+         * Throw specific error if player was not found, else use generic message
+         * BF2Hub returns E\t998 if a player was not found
+         * PlayBF2 returns a converged list of headers and dummy values in the first line if a player was not found
+         * Phoenix Network returns a normal response with an "E" header and "asof" plus "err" headers/values
+         */
+        const errMsg = firstLine == 'E\t998' || firstLine.startsWith('O	H	asof	D') || lines.join('').includes('Player Not Found')
+            ? 'Player not found' :
+            'Source query resulted in an error';
         throw new Error(errMsg);
     }
 
