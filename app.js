@@ -94,10 +94,10 @@ exports.lambdaHandler = async (event) => {
         // Group stats values for armies, classes, vehicles and weapons if requested
         if (sourceKey == 'getplayerinfo' && stats.player && !!event.queryStringParameters.groupValues) {
             stats.grouped = {
-                armies: await groupStatsByRegex(stats.player, /^a(?<key>[a-zA-Z]+)-(?<index>\d)$/),
-                classes: await groupStatsByRegex(stats.player, /^k(?<key>[a-zA-Z]+)-(?<index>\d)$/),
-                vehicles: await groupStatsByRegex(stats.player, /^v(?<key>[a-zA-Z]+)-(?<index>\d)$/),
-                weapons: await groupStatsByRegex(stats.player, /^w(?<key>[a-zA-Z]+)-(?<index>\d)$/)
+                armies: await groupStatsByRegex(stats.player, /^a(?<key>[a-zA-Z]+)-(?<index>\d+)$/),
+                classes: await groupStatsByRegex(stats.player, /^k(?<key>[a-zA-Z]+)-(?<index>\d+)$/),
+                vehicles: await groupStatsByRegex(stats.player, /^v(?<key>[a-zA-Z]+)-(?<index>\d+)$/),
+                weapons: await groupStatsByRegex(stats.player, /^w(?<key>[a-zA-Z]+)-(?<index>\d+)$/)
             }
         }
 
