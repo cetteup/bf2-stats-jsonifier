@@ -91,6 +91,16 @@ exports.lambdaHandler = async (event) => {
 
         const stats = await fetchFromSource(project, sources[sourceKey], event.queryStringParameters);
 
+        // Group stats values for armies, classes, vehicles and weapons if requested
+        if (sourceKey == 'getplayerinfo' && stats.player && !!event.queryStringParameters.groupValues) {
+            stats.grouped = {
+                armies: await groupStatsByRegex(stats.player, /^a(?<key>[a-zA-Z]+)-(?<index>\d)$/),
+                classes: await groupStatsByRegex(stats.player, /^k(?<key>[a-zA-Z]+)-(?<index>\d)$/),
+                vehicles: await groupStatsByRegex(stats.player, /^v(?<key>[a-zA-Z]+)-(?<index>\d)$/),
+                weapons: await groupStatsByRegex(stats.player, /^w(?<key>[a-zA-Z]+)-(?<index>\d)$/)
+            }
+        }
+
         // Finish setting up response
         response.statusCode = 200;
         response.headers['Cache-Control'] = `max-age=${process.env.CACHE_TTL || 600}`;
@@ -193,4 +203,20 @@ async function parseBf2Response(rawResponse, propertyKeys, forceReturnArray = fa
     });
 
     return returnObj;
+}
+
+async function groupStatsByRegex(playerStats, keyRegex) {
+    const grouped = [];
+    for (const key in playerStats) {
+        const match = keyRegex.exec(key);
+        if (match) {
+            const index = Number(match.groups.index);
+            if (!grouped[index]) {
+                grouped[index] = { id: index };
+            }
+            grouped[index][match.groups.key] = playerStats[key];
+        }
+    }
+
+    return grouped;
 }
