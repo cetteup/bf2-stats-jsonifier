@@ -48,6 +48,16 @@ const sources = {
         requiredParams: ['pid'],
         propertyKeys: ['status', 'unlocks']
     },
+    getleaderboard: {
+        endpoint: 'getleaderboard.aspx',
+        defaultParams: {
+            type: 'score',
+            id: 'overall'
+        },
+        requiredParams: [],
+        propertyKeys: ['players'],
+        forceReturnArray: true
+    },
     searchforplayers: {
         endpoint: 'searchforplayers.aspx',
         defaultParams: {},
