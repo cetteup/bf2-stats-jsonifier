@@ -265,6 +265,19 @@ function parseBf2Response(rawResponse: string, propertyKeys: string[] | undefine
         }
     }
 
+    /**
+     * All list methods should return two datasets: one containing metadata and one containing results.
+     * A common breach of this design: PlayBF2 does not support the rising star leaderboard. If you request it anyway,
+     * you get a single, empty dataset (which we cannot sensibly parse into the usual leaderboard response format):
+     * O
+     * H    size    asof
+     * $    10    $
+     *
+     */
+    if (forceReturnArray && datasets.length != 2) {
+        throw new Error('Source returned invalid response');
+    }
+
     // Build return object
     const returnObj: Record<string, any> = {}; // eslint-disable-line  @typescript-eslint/no-explicit-any
     for (const [index, dataset] of datasets.entries()) {
@@ -276,7 +289,9 @@ function parseBf2Response(rawResponse: string, propertyKeys: string[] | undefine
         const propertyKey = propertyKeys?.[index - 1];
         if (index == 0) {
             // "Promote" first line object root (only contains "asof" and similar metadata for most requests)
-            keys.forEach((key, index) => returnObj[key] = dataLines[0][index]);
+            for (const [index, key] of keys.entries()) {
+                returnObj[key] = dataLines[0]?.[index] ?? '';
+            }
         }
         else if (dataLines.length == 1 && !forceReturnArray && propertyKey) {
             // Only a single line of data in current dataset => add as properties under key (child object)
@@ -284,7 +299,7 @@ function parseBf2Response(rawResponse: string, propertyKeys: string[] | undefine
             returnObj[propertyKey] = {};
             // Add all data attributes under their respective keys
             for (const [index, key] of keys.entries()) {
-                returnObj[propertyKey][key] = dataLines[0][index];
+                returnObj[propertyKey][key] = dataLines[0]?.[index] ?? '';
             }
         }
         else if (propertyKey) {
