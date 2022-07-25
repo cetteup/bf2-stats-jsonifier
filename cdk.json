@@ -1,0 +1,4 @@
+{
+  "app": " yarn run ts-node --prefer-ts-exts bin/cdk.ts",
+  "context": {}
+}
