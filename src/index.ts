@@ -3,6 +3,12 @@ import fetch from 'node-fetch';
 import { Project, ProjectConfig, ProjectConfigs, Source, SourceConfig, SourceConfigs } from './static';
 
 const CACHE_TTL: number = Number(process.env.CACHE_TTL) || 600;
+const DEFAULT_RESPONSE_HEADERS = {
+    'content-type': 'application/json',
+    'access-control-allow-headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET,OPTIONS'
+}
 
 export async function main(
     event: APIGatewayProxyEvent,
@@ -63,7 +69,7 @@ export async function main(
         return {
             statusCode: 200,
             headers: {
-                'content-type': 'application/json',
+                ...DEFAULT_RESPONSE_HEADERS,
                 'cache-control': `max-age=${CACHE_TTL}`
             },
             body: JSON.stringify(response, null, 2)
@@ -83,7 +89,7 @@ export async function main(
 function buildErrorResponse(statusCode: number, message: string): APIGatewayProxyResult {
     return {
         statusCode,
-        headers: { 'content-type': 'application/json' },
+        headers: DEFAULT_RESPONSE_HEADERS,
         body: JSON.stringify({ errors: [message] }, null, 2)
     };
 }

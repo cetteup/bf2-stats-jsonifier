@@ -40,8 +40,15 @@ export class LambdaStack extends cdk.Stack {
                 authorizationType: api.AuthorizationType.NONE
             },
             defaultCorsPreflightOptions: {
-                allowMethods: ['OPTIONS', 'GET'],
+                allowMethods: ['GET', 'OPTIONS'],
                 allowOrigins: api.Cors.ALL_ORIGINS,
+                allowHeaders: [
+                    'Content-Type',
+                    'X-Amz-Date',
+                    'Authorization',
+                    'X-Api-Key',
+                    'X-Amz-Security-Token'
+                ]
             },
             domainName: {
                 domainName: domainName.valueAsString,
