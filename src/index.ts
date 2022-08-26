@@ -61,7 +61,8 @@ export async function main(
                     armies: groupStatsByRegex<ArmyStats>(playerInfo.player, /^a(?<key>[a-zA-Z]+)-(?<index>\d+)$/),
                     classes: groupStatsByRegex<ClassStats>(playerInfo.player, /^k(?<key>[a-zA-Z]+)-(?<index>\d+)$/),
                     vehicles: groupStatsByRegex<VehicleStats>(playerInfo.player, /^v(?<key>[a-zA-Z]+)-(?<index>\d+)$/),
-                    weapons: groupStatsByRegex<WeaponStats>(playerInfo.player, /^w(?<key>[a-zA-Z]+)-(?<index>\d+)$/)
+                    weapons: groupStatsByRegex<WeaponStats>(playerInfo.player, /^w(?<key>[a-zA-Z]+)-(?<index>\d+)$/),
+                    maps: groupStatsByRegex<MapStats>(playerInfo.player, /^m(?<key>[a-zA-Z]+)-(?<index>\d+)$/)
                 }
             };
         }
@@ -108,10 +109,11 @@ type GetPlayerInfoResponse = {
 
 type GroupedGetPlayerInfoResponse = GetPlayerInfoResponse & {
     grouped: {
-        armies: ArmyStats[]
-        classes: ClassStats[]
-        vehicles: VehicleStats[]
-        weapons: WeaponStats[]
+        armies?: ArmyStats[]
+        classes?: ClassStats[]
+        vehicles?: VehicleStats[]
+        weapons?: WeaponStats[]
+        maps?: MapStats[]
     }
 }
 type ArmyStats = {
@@ -143,6 +145,12 @@ type WeaponStats = {
     dt: string
     ac: string
     kd: string
+}
+type MapStats = {
+    id: number
+    tm: string
+    wn: string
+    ls: string
 }
 
 type GetRankInfoResponse = {
@@ -317,8 +325,9 @@ function parseBf2Response(rawResponse: string, propertyKeys: string[] | undefine
     return returnObj as AspxResponse;
 }
 
-function groupStatsByRegex<T extends ArmyStats | ClassStats | VehicleStats | WeaponStats>(playerStats: Record<string, string>, keyRegex: RegExp): T[] {
-    const grouped: Record<string, number | string>[] = [];
+function groupStatsByRegex<T extends ArmyStats | ClassStats | VehicleStats | WeaponStats | MapStats>(playerStats: Record<string, string>, keyRegex: RegExp): T[] | undefined {
+    // Parse into object first, since some entities don't have consecutive ids (e.g. maps use ...,6, 10, 11, 12, 100,...)
+    const grouped: Record<number, Record<string, number | string>> = {};
     for (const key in playerStats) {
         const match = keyRegex.exec(key);
         if (match && match.groups) {
@@ -330,5 +339,11 @@ function groupStatsByRegex<T extends ArmyStats | ClassStats | VehicleStats | Wea
         }
     }
 
-    return grouped as T[];
+    const asArray = Object.values(grouped);
+
+    if (asArray.length == 0) {
+        return
+    }
+
+    return asArray as T[];
 }
