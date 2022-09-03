@@ -2,6 +2,16 @@
 # yarn lockfile v1
 
 
+"@aws-cdk/aws-apigatewayv2-alpha@^2.40.0-alpha.0":
+  version "2.40.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigatewayv2-alpha/-/aws-apigatewayv2-alpha-2.40.0-alpha.0.tgz#8ad9981ac71da45ece1993eb8ced98a9674ba81a"
+  integrity sha512-VetlaG+IoiFNk3LwUPbivHIHVe0d6DtKMPcKDlW12sH+BGN/clYzp8gBHr4aNXq2+aGQ/BfT3qI8ZVWOLXK5vg==
+
+"@aws-cdk/aws-apigatewayv2-integrations-alpha@^2.40.0-alpha.0":
+  version "2.40.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigatewayv2-integrations-alpha/-/aws-apigatewayv2-integrations-alpha-2.40.0-alpha.0.tgz#4c3143a6b66623521ea98cc727a9b0bde66f5221"
+  integrity sha512-ryTaaIZxyE1Z8HD7ByUQn9SB8hsu2pk0NxR26uqYZHvVK9unplpBq7HpBD3ngz3B3WRY2BXBxq6mHBsUtiP+lg==
+
 "@aws-solutions-constructs/aws-cloudfront-apigateway@^2.11.0":
   version "2.11.0"
   resolved "https://registry.yarnpkg.com/@aws-solutions-constructs/aws-cloudfront-apigateway/-/aws-cloudfront-apigateway-2.11.0.tgz#015ef05800d8ab4697e16d724edb1c72e1c529cf"

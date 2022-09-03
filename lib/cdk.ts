@@ -1,10 +1,11 @@
 import * as cdk from 'aws-cdk-lib';
+import { Tags } from 'aws-cdk-lib';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as cm from 'aws-cdk-lib/aws-certificatemanager';
-import * as api from 'aws-cdk-lib/aws-apigateway';
+import { CorsHttpMethod, DomainName, HttpApi, HttpMethod, } from '@aws-cdk/aws-apigatewayv2-alpha';
+import { HttpLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
 import * as path from 'path';
-import {Tags} from "aws-cdk-lib";
 
 export class LambdaStack extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
@@ -31,18 +32,20 @@ export class LambdaStack extends cdk.Stack {
 
         const cert = cm.Certificate.fromCertificateArn(this, 'cert', certArn.valueAsString);
 
-        const apiGateway = new api.RestApi(this, 'api-gateway', {
-            restApiName: 'bf2-stats-jsonifier',
-            endpointConfiguration: {
-                types: [api.EndpointType.REGIONAL]
-            },
+        const dn = new DomainName(this, 'domain-name', {
+            domainName: domainName.valueAsString,
+            certificate: cert
+        });
+
+        const apiGateway = new HttpApi(this, 'api-gateway', {
+            apiName: 'bf2-stats-jsonifier',
             disableExecuteApiEndpoint: true,
-            defaultMethodOptions: {
-                authorizationType: api.AuthorizationType.NONE
-            },
-            defaultCorsPreflightOptions: {
-                allowMethods: ['GET', 'OPTIONS'],
-                allowOrigins: api.Cors.ALL_ORIGINS,
+            corsPreflight: {
+                allowMethods: [
+                    CorsHttpMethod.GET,
+                    CorsHttpMethod.OPTIONS
+                ],
+                allowOrigins: ['*'],
                 allowHeaders: [
                     'Content-Type',
                     'X-Amz-Date',
@@ -51,21 +54,23 @@ export class LambdaStack extends cdk.Stack {
                     'X-Amz-Security-Token'
                 ]
             },
-            domainName: {
-                domainName: domainName.valueAsString,
-                certificate: cert
-            }
+            defaultDomainMapping: {
+                domainName: dn,
+            },
         });
 
         const endpoints = ['getplayerinfo', 'getrankinfo', 'getawardsinfo', 'getunlocksinfo', 'getleaderboard', 'searchforplayers'];
-        const integration = new api.LambdaIntegration(queryFunction);
+        const integration = new HttpLambdaIntegration('query-function-integration', queryFunction);
         for (const endpoint of endpoints) {
-            const res = apiGateway.root.addResource(endpoint);
-            res.addMethod('GET', integration);
+            apiGateway.addRoutes({
+                path: `/${endpoint}`,
+                methods: [HttpMethod.GET],
+                integration: integration
+            });
         }
 
-        Tags.of(this).add('service', 'bf2-stats-jsonifier');
+        new cdk.CfnOutput(this, 'apiUrl', { value: apiGateway.url! });
 
-        new cdk.CfnOutput(this, 'apiUrl', { value: apiGateway.url });
+        Tags.of(this).add('service', 'bf2-stats-jsonifier');
     }
 }

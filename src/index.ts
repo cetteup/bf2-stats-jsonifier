@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent, APIGatewayProxyEventQueryStringParameters, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyEventV2, APIGatewayProxyEventQueryStringParameters, APIGatewayProxyResultV2 } from 'aws-lambda';
 import fetch from 'node-fetch';
 import { Project, ProjectConfig, ProjectConfigs, Source, SourceConfig, SourceConfigs } from './static';
 
@@ -8,12 +8,12 @@ const DEFAULT_RESPONSE_HEADERS = {
     'access-control-allow-headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
     'access-control-allow-origin': '*',
     'access-control-allow-methods': 'GET,OPTIONS'
-}
+};
 
 export async function main(
-    event: APIGatewayProxyEvent,
-): Promise<APIGatewayProxyResult> {
-    const { path, queryStringParameters: queryParams } = event;
+    event: APIGatewayProxyEventV2,
+): Promise<APIGatewayProxyResultV2> {
+    const { rawPath: path, queryStringParameters: queryParams } = event;
 
     // Try to fetch data from cache or source
     try {
@@ -87,7 +87,7 @@ export async function main(
     }
 }
 
-function buildErrorResponse(statusCode: number, message: string): APIGatewayProxyResult {
+function buildErrorResponse(statusCode: number, message: string): APIGatewayProxyResultV2 {
     return {
         statusCode,
         headers: DEFAULT_RESPONSE_HEADERS,
@@ -342,7 +342,7 @@ function groupStatsByRegex<T extends ArmyStats | ClassStats | VehicleStats | Wea
     const asArray = Object.values(grouped);
 
     if (asArray.length == 0) {
-        return
+        return;
     }
 
     return asArray as T[];
