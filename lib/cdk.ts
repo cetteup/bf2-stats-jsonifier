@@ -4,6 +4,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as cm from 'aws-cdk-lib/aws-certificatemanager';
 import * as api from 'aws-cdk-lib/aws-apigateway';
 import * as path from 'path';
+import {Tags} from "aws-cdk-lib";
 
 export class LambdaStack extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
@@ -62,6 +63,8 @@ export class LambdaStack extends cdk.Stack {
             const res = apiGateway.root.addResource(endpoint);
             res.addMethod('GET', integration);
         }
+
+        Tags.of(this).add('service', 'bf2-stats-jsonifier');
 
         new cdk.CfnOutput(this, 'apiUrl', { value: apiGateway.url });
     }
